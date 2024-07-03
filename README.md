@@ -6,8 +6,7 @@
 </div>
 <br>
 
-<!-- 이미지 추가-->
-<img src="">
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/aa89991a-cd4f-4fc5-aadf-59d1aea5cbed">
 <br><br>
 
 ## 메인 아이디어
@@ -307,7 +306,7 @@
 <img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/06275901-0bd6-4cb3-ac25-5f8c40a9c2f4"/>
 
 <details>
-    <summary> <img src="https://img.shields.io/badge/sunglassFunction-3776AB.svg?style=flat-square"/> </summary>
+    <summary> <img src="https://img.shields.io/badge/blushFunction-3776AB.svg?style=flat-square"/> </summary>
 
   ```Python
    def blushFunction(self, state):
@@ -364,5 +363,254 @@
                        self.frame[y3:y4, x3:x4] = self.frame[y3:y4, x3:x4]*(1-alpha) + rblush[:, :, :3]*alpha
                
            self.showVideo()
+  ```
+</details>
+
+### 볼하트 필터
+- `heart` 변수를 `heart.png`로 초기화
+- `process`를 통해 얼굴 객체 검출
+- `landmark`에서 양쪽 볼의 왼쪽끝, 오른쪽끝, 중앙 랜드마크 좌표 가져옴
+- 얼굴 크기를 계산하고 필터 크기를 적절히 조절하여 프레임에 적용
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/9cfd29ae-6086-4147-b05d-6ae03e2f4f6e"/>
+
+<details>
+    <summary> <img src="https://img.shields.io/badge/heartFunction-3776AB.svg?style=flat-square"/> </summary>
+
+  ```Python
+  def heartFunction(self, state):
+      # 볼하트 필터
+      while True:
+          ret, self.frame = cap.read()
+          
+          heart = cv.imread('heart.png', cv.IMREAD_UNCHANGED)
+          
+          res = mesh.process(cv.cvtColor(self.frame, cv.COLOR_BGR2RGB))
+  
+          if res.multi_face_landmarks:
+              for landmarks in res.multi_face_landmarks:
+                  lcheek_lx, lcheek_ly = 0, 0
+                  lcheek_rx, lcheek_ry = 0, 0
+                  lcheek_cx, lcheek_cy = 0, 0
+                  
+                  rcheek_lx, rcheek_ly = 0, 0
+                  rcheek_rx, rcheek_ry = 0, 0
+                  rcheek_cx, rcheek_cy = 0, 0
+                  
+                  for id, p in enumerate(landmarks.landmark):
+                      x, y = int(p.x*self.frame.shape[1]), int(p.y*self.frame.shape[0])
+                      if id == 366:
+                          lcheek_lx, lcheek_ly = x, y
+                      if id == 358:
+                          lcheek_rx, lcheek_ry = x, y
+                      if id == 280:
+                          lcheek_cx, lcheek_cy = x, y
+                      if id == 129:
+                          rcheek_lx, rcheek_ly = x, y
+                      if id == 137:
+                          rcheek_rx, rcheek_ry = x, y
+                      if id == 50:
+                          rcheek_cx, rcheek_cy = x, y
+                          
+                  lcheek_w, rcheek_w = lcheek_lx-lcheek_rx, rcheek_lx-rcheek_rx
+                  lcheek_h, rcheek_h = lcheek_w, rcheek_w
+                      
+                  x1, x2 = int(lcheek_cx - lcheek_w/2), int(lcheek_cx + lcheek_w/2)
+                  y1, y2 = int(lcheek_cy - lcheek_h/2), int(lcheek_cy + lcheek_h/2)
+                  
+                  if lcheek_w > 0 and lcheek_h > 0 and x1 > 0 and y1 > 0 and x2 < self.frame.shape[1] and y2 < self.frame.shape[0]:
+                      lheart = cv.resize(heart, dsize=(lcheek_w, lcheek_h))
+                      alpha = lheart[:, :, 3:]/255
+                      self.frame[y1:y2, x1:x2] = self.frame[y1:y2, x1:x2]*(1-alpha) + lheart[:, :, :3]*alpha
+                      
+                  x3, x4 = int(rcheek_cx - rcheek_w/2), int(rcheek_cx + rcheek_w/2)
+                  y3, y4 = int(rcheek_cy - rcheek_h/2), int(rcheek_cy + rcheek_h/2)
+                  
+                  if rcheek_w > 0 and rcheek_h > 0 and x3 > 0 and y3 > 0 and x4 < self.frame.shape[1] and y4 < self.frame.shape[0]:
+                      rheart = cv.resize(heart, dsize=(rcheek_w, rcheek_h))
+                      alpha = rheart[:, :, 3:]/255
+                      self.frame[y3:y4, x3:x4] = self.frame[y3:y4, x3:x4]*(1-alpha) + rheart[:, :, :3]*alpha
+              
+          self.showVideo()
+  ```
+</details>
+
+### 구름 필터
+- `cloud` 변수를 `cloud.png`로 초기화
+- `process`를 통해 얼굴 객체 검출
+- `landmark`에서 머리의 왼쪽끝, 오른쪽끝, 중앙 랜드마크 좌표 가져옴
+- 얼굴 크기를 계산하고 필터 크기를 적절히 조절하여 프레임에 적용
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/e3f10b83-a288-4f3f-82ff-b917191261b4"/>
+
+<details>
+    <summary> <img src="https://img.shields.io/badge/cloudFunction-3776AB.svg?style=flat-square"/> </summary>
+
+  ```Python
+  def cloudFunction(self, state):
+      # 구름 필터
+      while True:
+          ret, self.frame = cap.read()
+          
+          cloud = cv.imread('cloud.png', cv.IMREAD_UNCHANGED)
+          
+          res = mesh.process(cv.cvtColor(self.frame, cv.COLOR_BGR2RGB))
+  
+          if res.multi_face_landmarks:
+              for landmarks in res.multi_face_landmarks:
+                  head_x, head_y = 0, 0
+                  
+                  for id, p in enumerate(landmarks.landmark):
+                      x, y = int(p.x*self.frame.shape[1]), int(p.y*self.frame.shape[0])
+                      if id == 67:
+                          head_lx, head_ly = x, y
+                      if id == 287:
+                          head_rx, head_ry = x, y
+                      if id == 10:
+                          head_cx, head_cy = x, y
+                             
+                  head_w = head_rx-head_lx
+                  head_h = int(head_w/1.54)
+                  
+                  x1, x2 = int(head_cx - 3*head_w/2), int(head_cx + 3*head_w/2)
+                  y1, y2 = int(head_cy - 7*head_h/2), int(head_cy - head_h/2)
+                  
+                  if head_w > 0 and head_h > 0 and x1 > 0 and y1 > 0 and x2 < self.frame.shape[1] and y2 < self.frame.shape[0]:
+                      clouds = cv.resize(cloud, dsize=(3*head_w, 3*head_h)) 
+                      alpha = clouds[:, :, 3:]/255
+                      self.frame[y1:y2, x1:x2] = self.frame[y1:y2, x1:x2]*(1-alpha) + clouds[:, :, :3]*alpha
+              
+          self.showVideo()
+  ```
+</details>
+
+### 맥하트 필터
+- `heart` 변수를 `mac_heart.png`로 초기화
+- `process`를 통해 얼굴 객체 검출
+- `landmark`에서 머리의 왼쪽끝, 오른쪽끝, 중앙 랜드마크 좌표 가져옴
+- 얼굴 크기를 계산하고 필터 크기를 적절히 조절하여 프레임에 적용
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/72953b69-cdd5-49af-b478-60d914041065"/>
+
+<details>
+    <summary> <img src="https://img.shields.io/badge/macheartFunction-3776AB.svg?style=flat-square"/> </summary>
+
+  ```Python
+  def heartFunction(self, state):
+      # 볼하트 필터
+      while True:
+          ret, self.frame = cap.read()
+          
+          heart = cv.imread('heart.png', cv.IMREAD_UNCHANGED)
+          
+          res = mesh.process(cv.cvtColor(self.frame, cv.COLOR_BGR2RGB))
+  
+          if res.multi_face_landmarks:
+              for landmarks in res.multi_face_landmarks:
+                  lcheek_lx, lcheek_ly = 0, 0
+                  lcheek_rx, lcheek_ry = 0, 0
+                  lcheek_cx, lcheek_cy = 0, 0
+                  
+                  rcheek_lx, rcheek_ly = 0, 0
+                  rcheek_rx, rcheek_ry = 0, 0
+                  rcheek_cx, rcheek_cy = 0, 0
+                  
+                  for id, p in enumerate(landmarks.landmark):
+                      x, y = int(p.x*self.frame.shape[1]), int(p.y*self.frame.shape[0])
+                      if id == 366:
+                          lcheek_lx, lcheek_ly = x, y
+                      if id == 358:
+                          lcheek_rx, lcheek_ry = x, y
+                      if id == 280:
+                          lcheek_cx, lcheek_cy = x, y
+                      if id == 129:
+                          rcheek_lx, rcheek_ly = x, y
+                      if id == 137:
+                          rcheek_rx, rcheek_ry = x, y
+                      if id == 50:
+                          rcheek_cx, rcheek_cy = x, y
+                          
+                  lcheek_w, rcheek_w = lcheek_lx-lcheek_rx, rcheek_lx-rcheek_rx
+                  lcheek_h, rcheek_h = lcheek_w, rcheek_w
+                      
+                  x1, x2 = int(lcheek_cx - lcheek_w/2), int(lcheek_cx + lcheek_w/2)
+                  y1, y2 = int(lcheek_cy - lcheek_h/2), int(lcheek_cy + lcheek_h/2)
+                  
+                  if lcheek_w > 0 and lcheek_h > 0 and x1 > 0 and y1 > 0 and x2 < self.frame.shape[1] and y2 < self.frame.shape[0]:
+                      lheart = cv.resize(heart, dsize=(lcheek_w, lcheek_h))
+                      alpha = lheart[:, :, 3:]/255
+                      self.frame[y1:y2, x1:x2] = self.frame[y1:y2, x1:x2]*(1-alpha) + lheart[:, :, :3]*alpha
+                      
+                  x3, x4 = int(rcheek_cx - rcheek_w/2), int(rcheek_cx + rcheek_w/2)
+                  y3, y4 = int(rcheek_cy - rcheek_h/2), int(rcheek_cy + rcheek_h/2)
+                  
+                  if rcheek_w > 0 and rcheek_h > 0 and x3 > 0 and y3 > 0 and x4 < self.frame.shape[1] and y4 < self.frame.shape[0]:
+                      rheart = cv.resize(heart, dsize=(rcheek_w, rcheek_h))
+                      alpha = rheart[:, :, 3:]/255
+                      self.frame[y3:y4, x3:x4] = self.frame[y3:y4, x3:x4]*(1-alpha) + rheart[:, :, :3]*alpha
+              
+          self.showVideo()
+  ```
+</details>
+
+### 촬영 기능
+- 촬영 버튼 클릭 시 `photoFuction()` 함수 호출
+- 버튼이 눌릴때 마다 `imgs`에 `frame` 저장
+- 4번 촬영을 완료하면 `imgs`를 `np.vstack`로 수직 결합하여 새로운 윈도우 창에 표시
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/5dc3e0ba-bd73-4146-ba25-ec71c66e446d" width="45%"/>
+
+<details>
+    <summary> <img src="https://img.shields.io/badge/photoFunction-3776AB.svg?style=flat-square"/> </summary>
+
+  ```Python
+  def photoFunction(self):
+      # 촬영
+      self.imgs.append(cv.flip(self.frame, 1))
+      self.label.setText(str(len(self.imgs))+'/4')
+      
+      if len(self.imgs) > 3:
+          self.photoBtn.setEnabled(False)
+          self.rephotoBtn.setEnabled(True)
+          self.saveBtn.setEnabled(True)
+          self.saveBtn.setEnabled(True)
+          
+          self.stack = cv.resize(self.imgs[0], dsize=(0,0), fx=0.35, fy=0.35)
+          for i in range(1, len(self.imgs)):
+              self.stack = np.vstack((self.stack, cv.resize(self.imgs[i], dsize=(0,0), fx=0.35, fy=0.35)))
+              
+              cv.namedWindow(' ')
+              cv.moveWindow(' ', 1080, 155)
+              cv.imshow(' ', self.stack)
+  ```
+</details>
+
+### 재촬영 기능
+- 재촬영 버튼 클릭 시 `rephotoFunction()` 함수 호출
+- `imgs`를 빈 배열로 초기화
+
+<details>
+    <summary> <img src="https://img.shields.io/badge/rephotoFunction-3776AB.svg?style=flat-square"/> </summary>
+
+  ```Python
+  def rephotoFunction(self):
+      # 재촬영
+      self.photoBtn.setEnabled(True)
+      self.rephotoBtn.setEnabled(False)
+      self.saveBtn.setEnabled(False)
+      self.imgs=[]
+      self.label.setText('0/4')
+      cv.destroyWindow(' ')
+  ```
+</details>
+
+### 저장 기능
+- `QFileDialog`으로 파일 저장 이름 선택 후 이미지 저장
+<img src="https://github.com/irrso/computer-vision-4-snapshots-pc.ver/assets/105829324/0d502cfd-f212-41c1-ada2-8919848e8954" width="35%"/>
+
+ <details>
+    <summary> <img src="https://img.shields.io/badge/saveFunction-3776AB.svg?style=flat-square"/> </summary>
+   
+```Python
+  def savcloseFunction(self):
+      # 사진 저장
+      fname = QFileDialog.getSaveFileName(self, '파일 저장', './', 'Image files (*.jpeg)')
+      cv.imwrite(fname[0], self.stack)
   ```
 </details>
